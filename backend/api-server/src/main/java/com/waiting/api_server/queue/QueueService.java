@@ -1,5 +1,6 @@
 package com.waiting.api_server.queue;
 
+import com.waiting.common.QueueKeys;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
