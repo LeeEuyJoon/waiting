@@ -1,6 +1,8 @@
 package com.waiting.admission_worker;
 
 import com.waiting.common.QueueKeys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -12,6 +14,8 @@ import java.util.List;
 
 @Component
 public class AdmissionWorker {
+
+    private static final Logger log = LoggerFactory.getLogger(AdmissionWorker.class);
 
     private static final String SCHEDULE_ID = "train101";
 
@@ -38,8 +42,11 @@ public class AdmissionWorker {
         );
 
         if (admitted != null && !admitted.isEmpty()) {
-            admitted.forEach(token ->
-                    System.out.println("Admitted: " + token));
+            String channel = QueueKeys.admissionChannel(SCHEDULE_ID);
+            admitted.forEach(token -> {
+                log.info("Admitted: {}", token);
+                redisTemplate.convertAndSend(channel, token);
+            });
         }
     }
 

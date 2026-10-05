@@ -1,2 +1,2 @@
 rootProject.name = 'backend'
-include 'common', 'api-server', 'admission-worker'
+include 'common', 'api-server', 'admission-worker', 'sse-server'
