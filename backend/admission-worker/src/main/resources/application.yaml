@@ -1,3 +1,10 @@
 spring:
   application:
     name: admission-worker
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+queue:
+  capacity: 5
