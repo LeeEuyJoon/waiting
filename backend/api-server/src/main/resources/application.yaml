@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: api-server
+  data:
+    redis:
+      host: localhost
+      port: 6379
