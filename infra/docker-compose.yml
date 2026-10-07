@@ -86,6 +86,7 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/waiting
       SPRING_DATA_REDIS_CLUSTER_NODES: redis-node-1:6379,redis-node-2:6379,redis-node-3:6379,redis-node-4:6379,redis-node-5:6379,redis-node-6:6379
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus,health
     depends_on:
       redis-node-1:
         condition: service_healthy
@@ -107,6 +108,7 @@ services:
     environment:
       SPRING_DATA_REDIS_CLUSTER_NODES: redis-node-1:6379,redis-node-2:6379,redis-node-3:6379,redis-node-4:6379,redis-node-5:6379,redis-node-6:6379
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/waiting
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus,health
     depends_on:
       redis-node-1:
         condition: service_healthy
@@ -127,6 +129,7 @@ services:
       dockerfile: sse-server/Dockerfile
     environment:
       SPRING_DATA_REDIS_CLUSTER_NODES: redis-node-1:6379,redis-node-2:6379,redis-node-3:6379,redis-node-4:6379,redis-node-5:6379,redis-node-6:6379
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus,health
     depends_on:
       redis-node-1:
         condition: service_healthy
@@ -147,6 +150,7 @@ services:
       dockerfile: sse-server/Dockerfile
     environment:
       SPRING_DATA_REDIS_CLUSTER_NODES: redis-node-1:6379,redis-node-2:6379,redis-node-3:6379,redis-node-4:6379,redis-node-5:6379,redis-node-6:6379
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus,health
     depends_on:
       redis-node-1:
         condition: service_healthy
@@ -167,6 +171,7 @@ services:
       dockerfile: admission-worker/Dockerfile
     environment:
       SPRING_DATA_REDIS_CLUSTER_NODES: redis-node-1:6379,redis-node-2:6379,redis-node-3:6379,redis-node-4:6379,redis-node-5:6379,redis-node-6:6379
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus,health
     depends_on:
       redis-node-1:
         condition: service_healthy
@@ -192,3 +197,17 @@ services:
       - api-server-2
       - sse-server-1
       - sse-server-2
+  
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
