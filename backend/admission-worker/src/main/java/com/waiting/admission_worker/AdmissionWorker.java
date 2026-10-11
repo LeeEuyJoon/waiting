@@ -25,6 +25,9 @@ public class AdmissionWorker {
     @Value("${queue.capacity}")
     private int capacity;
 
+    @Value("${admission.ttl-seconds}")
+    private long ttlSeconds;
+
     public AdmissionWorker(StringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
         this.admissionScript = RedisScript.of(new ClassPathResource("admission.lua"), List.class);
@@ -35,10 +38,15 @@ public class AdmissionWorker {
         String queueKey = QueueKeys.queueKey(SCHEDULE_ID);
         String activeKey = QueueKeys.activeKey(SCHEDULE_ID);
 
+        long now = System.currentTimeMillis();
+        long ttlMillis = ttlSeconds * 1000;
+
         List<String> admitted = redisTemplate.execute(
                 admissionScript,
                 List.of(queueKey, activeKey),
-                String.valueOf(capacity)
+                String.valueOf(capacity),
+                String.valueOf(now),
+                String.valueOf(ttlMillis)
         );
 
         if (admitted != null && !admitted.isEmpty()) {

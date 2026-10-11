@@ -37,8 +37,8 @@ public class MetricsConfig {
     }
 
     private double activeCount(StringRedisTemplate template) {
-        String value = template.opsForValue().get(QueueKeys.activeKey(SCHEDULE_ID));
-        return value != null ? Double.parseDouble(value) : 0.0;
+        Long size = template.opsForZSet().size(QueueKeys.activeKey(SCHEDULE_ID));
+        return size != null ? size.doubleValue() : 0.0;
     }
 
 }

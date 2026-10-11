@@ -8,3 +8,6 @@ spring:
 
 queue:
   capacity: 5
+
+admission:
+  ttl-seconds: 60
