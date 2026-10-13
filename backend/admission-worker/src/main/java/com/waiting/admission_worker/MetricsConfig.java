@@ -7,6 +7,8 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
+import java.util.Set;
+
 @Configuration
 public class MetricsConfig {
 
@@ -32,8 +34,14 @@ public class MetricsConfig {
     }
 
     private double queueSize(StringRedisTemplate template) {
-        Long size = template.opsForZSet().size(QueueKeys.queueKey(SCHEDULE_ID));
-        return size != null ? size.doubleValue() : 0.0;
+        Set<String> scheduleIds = template.opsForSet().members(QueueKeys.activeSchedulesKey());
+        if (scheduleIds == null) return 0.0;
+        return scheduleIds.stream()
+                .mapToLong(id -> {
+                    Long size = template.opsForZSet().size(QueueKeys.queueKey(id));
+                    return size != null ? size : 0L;
+                })
+                .sum();
     }
 
     private double activeCount(StringRedisTemplate template) {

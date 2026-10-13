@@ -16,4 +16,8 @@ public class QueueKeys {
     public static String admissionChannelPattern() {
         return "admission:*";
     }
+
+    public static String activeSchedulesKey() {
+        return "active-schedules";
+    }
 }

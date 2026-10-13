@@ -11,13 +11,12 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
 
 import java.util.List;
+import java.util.Set;
 
 @Component
 public class AdmissionWorker {
 
     private static final Logger log = LoggerFactory.getLogger(AdmissionWorker.class);
-
-    private static final String SCHEDULE_ID = "train101";
 
     private final StringRedisTemplate redisTemplate;
     private final RedisScript<List> admissionScript;
@@ -35,8 +34,18 @@ public class AdmissionWorker {
 
     @Scheduled(fixedDelay = 1000)
     public void admit() {
-        String queueKey = QueueKeys.queueKey(SCHEDULE_ID);
-        String activeKey = QueueKeys.activeKey(SCHEDULE_ID);
+        Set<String> scheduleIds = redisTemplate.opsForSet().members(QueueKeys.activeSchedulesKey());
+        if (scheduleIds == null || scheduleIds.isEmpty()) {
+            return;
+        }
+        for (String scheduleId: scheduleIds) {
+            admitForSchedule(scheduleId);
+        }
+    }
+
+    private void admitForSchedule(String scheduleId) {
+        String queueKey = QueueKeys.queueKey(scheduleId);
+        String activeKey = QueueKeys.activeKey(scheduleId);
 
         long now = System.currentTimeMillis();
         long ttlMillis = ttlSeconds * 1000;
@@ -50,11 +59,22 @@ public class AdmissionWorker {
         );
 
         if (admitted != null && !admitted.isEmpty()) {
-            String channel = QueueKeys.admissionChannel(SCHEDULE_ID);
+            String channel = QueueKeys.admissionChannel(scheduleId);
             admitted.forEach(token -> {
-                log.info("Admitted: {}", token);
+                log.info("Admitted: {} ({})", token, scheduleId);
                 redisTemplate.convertAndSend(channel, token);
             });
+        }
+
+        cleanupIfEmpty(scheduleId, queueKey, activeKey);
+    }
+
+    private void cleanupIfEmpty(String scheduleId, String queueKey, String activeKey) {
+        Long queueSize = redisTemplate.opsForZSet().size(queueKey);
+        Long activeSize = redisTemplate.opsForZSet().size(activeKey);
+        boolean empty = (queueSize == null || queueSize == 0) && (activeSize == null || activeSize == 0);
+        if (empty) {
+            redisTemplate.opsForSet().remove(QueueKeys.activeSchedulesKey(), scheduleId);
         }
     }
 

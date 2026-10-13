@@ -20,6 +20,8 @@ public class QueueService {
         String key = QueueKeys.queueKey(scheduleId);
         double score = System.currentTimeMillis();
         redisTemplate.opsForZSet().add(key, token, score);
+
+        redisTemplate.opsForSet().add(QueueKeys.activeSchedulesKey(), scheduleId);
         return token;
     }
 
